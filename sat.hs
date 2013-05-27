@@ -44,5 +44,5 @@ walksub     :: Sentence -> Bool
 walksub     = error "undefined"
 
 -- Exploit Lazyness to get a stream of Sat Sentences with "a" Literals
-genSat :: Integer -> [Sentence]
-genSat a = error "undefined"
+genSat :: Integer -> Integer -> Sentence
+genSat n m = error "undefined"
