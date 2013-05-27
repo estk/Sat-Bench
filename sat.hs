@@ -14,11 +14,25 @@ type Sentence  = [Clause]
 type BoolVector = [Literal]
 type BoolSpace  = [BoolVector]
 
---- Algs ---
-
+--- Algorithms ---
 
 davisPutnam :: Sentence -> Bool
-davisPutnam = error "undefined"
+davisPutnam s | null s     = True
+              | hasEmpty s = False
+              | otherwise  = or . map davisPutnam $ assign s
+
+assign :: Sentence -> [Sentence]
+assign s@((x:xs):ys) = [(prune (abs x) s), (prune (negate (abs x)) s)]
+
+--remove clauses with x and then remove +-x from each clause
+prune :: Integer -> Sentence -> Sentence
+prune x s = map (filter (diffAbs x)) $ filter (x `notElem`) s
+
+diffAbs :: Integer -> Integer -> Bool
+diffAbs x y = abs x == abs y
+
+hasEmpty :: Sentence -> Bool
+hasEmpty s = or $ map null s
 
 subtraction :: Sentence -> Bool
 subtraction = error "undefined"
