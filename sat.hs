@@ -34,8 +34,39 @@ diffAbs x y = abs x == abs y
 hasEmpty :: Sentence -> Bool
 hasEmpty s = or $ map null s
 
+-----------------
+-- Subtraction --
+
+type SS = Sentence
+type SClause = Clause
+type SLiteral = Literal
+
 subtraction :: Sentence -> Bool
-subtraction = error "undefined"
+subtraction = not . null . resolution
+
+resolution :: Sentence -> SS
+resolution = foldl subClause []
+
+subClause :: SS -> Clause -> SS
+subClause ss c = concatMap (res c) ss
+
+res :: Clause -> SClause -> SS
+res c sc = case foldl match ([], sc, c) c of
+            (ss, _, _) -> ss
+
+match :: (SS, SClause, Clause) -> Literal -> (SS, SClause, Clause)
+match a@(solns, s, c) l = case samePairity l s of
+                 Just True  -> (s:solns, s, c)
+                 Just False -> (solns, s, c)
+                 Nothing    -> (((negLeftL l c)++[l]):solns, s, c)
+
+samePairity :: Literal -> SClause -> Maybe Bool
+samePairity l s = case filter ((== abs l) . abs) s of
+                    [] -> Nothing
+                    lst -> Just $ l `elem` lst
+
+negLeftL :: Literal -> Clause -> SClause
+negLeftL l = map negate . filter ((< abs l) . abs)
 
 walkthru    :: Sentence -> Bool
 walkthru    = error "undefined"
