@@ -44,8 +44,9 @@ type SLiteral = Literal
 subtraction :: Sentence -> Bool
 subtraction = not . null . resolution
 
+-- need a non-null clause to start with
 resolution :: Sentence -> SS
-resolution = foldl subClause []
+resolution = foldl subClause [[0]]
 
 subClause :: SS -> Clause -> SS
 subClause ss c = concatMap (res c) ss
@@ -55,7 +56,7 @@ res c sc = case foldl match ([], sc, c) c of
             (ss, _, _) -> ss
 
 match :: (SS, SClause, Clause) -> Literal -> (SS, SClause, Clause)
-match a@(solns, s, c) l = case samePairity l s of
+match (solns, s, c) l = case samePairity l s of
                  Just True  -> (s:solns, s, c)
                  Just False -> (solns, s, c)
                  Nothing    -> (((negLeftL l c)++[l]):solns, s, c)
