@@ -19,20 +19,22 @@ type BoolSpace  = [BoolVector]
 davisPutnam :: Sentence -> Bool
 davisPutnam s | null s     = True
               | hasEmpty s = False
-              | otherwise  = or . map davisPutnam $ assign s
+              | otherwise  = or . map davisPutnam $ assignBranch s
 
-assign :: Sentence -> [Sentence]
-assign s@((x:xs):ys) = [(prune (abs x) s), (prune (negate (abs x)) s)]
+assignBranch :: Sentence -> [Sentence]
+assignBranch s@((x:xs):ys) = [(assign (abs x) s), (assign (negate (abs x)) s)]
 
 --remove clauses with x and then remove +-x from each clause
-prune :: Integer -> Sentence -> Sentence
-prune x s = map (filter (diffAbs x)) $ filter (x `notElem`) s
+assign :: Integer -> Sentence -> Sentence
+assign l s = map (rmLiteral l) $ foldr f [] s
+  where f c a | l `notElem` c = rmLiteral l c : a
+              | otherwise     = a
 
-diffAbs :: Integer -> Integer -> Bool
-diffAbs x y = abs x == abs y
+rmLiteral :: Literal -> Clause -> Clause
+rmLiteral l = filter ((/= abs l) . abs)
 
 hasEmpty :: Sentence -> Bool
-hasEmpty s = or $ map null s
+hasEmpty = or . map null
 
 -----------------
 -- Subtraction --
