@@ -16,6 +16,10 @@ type BoolSpace  = [BoolVector]
 
 --- Algorithms ---
 
+------------------
+-- Davis Putnam --
+------------------
+
 davisPutnam :: Sentence -> Bool
 davisPutnam s | null s     = True
               | hasEmpty s = False
@@ -38,6 +42,7 @@ hasEmpty = or . map null
 
 -----------------
 -- Subtraction --
+-----------------
 
 type SS = Sentence
 type SClause = Clause
