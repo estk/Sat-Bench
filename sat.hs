@@ -62,14 +62,31 @@ subClause :: SS -> Clause -> SS
 subClause ss c = concatMap (res c) ss
 
 res :: Clause -> SClause -> SS
-res c sc = case foldl match ([], sc, c) c of
-            (ss, _, _) -> ss
+res c sc = if not . null $ c `intersect` sc
+             then [sc] --most general sclause matches
+             else addin sc $ filter (not . (`absElem` sc)) c --consider free vars
+
+--take a SClause and literals which can be assigned such that they will match the clause specified to the caller. 
+addin :: SClause -> [Literal] -> SS
+addin sc lst = map (++ sc) (addends [] lst)
+
+        
+addends :: [Literal] -> [Literal] ->[[Literal]]
+addends added []   = []
+addends added lst =   (minAbsRest : (map negate $ delete minAbsRest added))
+                    : (addends (minAbsRest:added) $ (delete minAbsRest) lst)
+  where minAbsRest = minAbs $ lst \\ added
+
+absElem :: (Num a, Eq a) => a -> [a] -> Bool
+absElem a lst = abs a `elem` map abs lst
+{-case foldl match ([], sc, c) c of-}
+            {-(ss, _, _) -> ss-}
 
 match :: (SS, SClause, Clause) -> Literal -> (SS, SClause, Clause)
-match (solns, s, c) l = case samePairity l s of
-                 Just True  -> (s:solns, s, c)
-                 Just False -> (solns, s, c)
-                 Nothing    -> ((negLeftL l c ++ [l]):solns, s, c)
+match (ss, s, c) l = case samePairity l s of
+                 Just True  -> (s:ss, s, c)
+                 Just False -> (ss, s, c)
+                 Nothing    -> ((negLeftL l c ++ [l]):ss, s, c)
 
 -- Nothing => not in, Just True => Same pairity, Just False => opposite
 -- pairity
@@ -159,6 +176,6 @@ genSatHelp rs = makeClause : (genSatHelp $ drop 3 rs)
         makeClause = delete 0 $ nubBy eqAbs $ take 3 rs
 
 test = (unsafePerformIO $ print $ head datas) `seq` map dm algs
-  where datas = [take 10 gen3Sats, take 100 gen3Sats, take 1000 gen3Sats]
+  where datas = [take 5 gen3Sats, take 100 gen3Sats, take 1000 gen3Sats]
         algs  = [davisPutnam, subtraction, walkthru]
         dm alg = map alg datas
