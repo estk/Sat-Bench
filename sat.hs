@@ -9,6 +9,7 @@ import Data.List
 import Data.Ord
 import Data.Function
 import Control.Applicative
+import System.Random
 
 -- We opt for DIMACS[5] representation as in  the reader
 type Literal = Integer
@@ -133,8 +134,28 @@ minAbs sc = foldl mAbs (head sc) sc
 -------------
         
 walksub     :: Sentence -> Bool
-walksub     = error "undefined"
+walksub s = case ws s of -- accumulate a solution
+           Nothing -> False
+           Just _  -> True
+
+ws :: Sentence -> Maybe SClause
+ws = foldl (matchWS [[0]]) (Just [])
+
+matchWS :: SS -> Maybe SClause -> Clause -> Maybe SClause
+matchWS _ Nothing _    = Nothing
+matchWS ss (Just sc) c = if sc `satisfies` c
+               then Just sc
+               else error "unwritten"
+
 
 -- Exploit Lazyness to get a stream of Sat Sentences with "a" Literals
 genSat :: Integer -> Integer -> Sentence
-genSat n m = error "undefined"
+genSat 3 m = genSatHelp rs m
+    where g = mkStdGen 1
+          rs = randomRs (-3,3) g
+genSat n m = error "genSat is unwritten"
+
+genSatHelp :: [Integer] -> Integer -> Sentence
+genSatHelp _ 0 = []
+genSatHelp rs m = (delete 0 $ nubBy eqAbs $ take 3 rs) : (genSatHelp (drop 3 rs) (m-1))
+  where eqAbs x y = abs x == abs y
