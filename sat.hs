@@ -2,7 +2,7 @@ module Sat ( davisPutnam
            , subtraction
            , walkthru
            , walksub
-           , genSat
+           , gen3Sats
            ) where
 
 import Data.List
@@ -56,7 +56,7 @@ subtraction = not . null . resolution
 
 -- need a non-null clause to start with
 resolution :: Sentence -> SS
-resolution = foldl subClause [[0]]
+resolution s = foldl subClause [[0]] s
 
 subClause :: SS -> Clause -> SS
 subClause ss c = concatMap (res c) ss
@@ -86,27 +86,30 @@ negLeftL l = map negate . filter ((< abs l) . abs)
 -- Walkthru --
 --------------
 
-{-walkthru    :: Sentence -> Bool-}
-{-walkthru    = or . map walk . permutations-}
-    
 walkthru :: Sentence -> Bool
-walkthru s = case foldl' matchW (Just []) s of -- accumulate a solution
-           Nothing -> False
-           Just _  -> True
+walkthru s = walk s []
+    
+walk :: Sentence -> [Sentence] -> Bool
+walk s p = if s `elem` p
+             then False
+             else 
+               case foldl matchW (Left []) s of -- accumulate a solution
+                 Right c -> walk (c:(delete c s)) (s:p)
+                 Left _  -> True
 
-matchW :: Maybe SClause -> Clause -> Maybe SClause
-matchW Nothing _ = Nothing
-matchW (Just sc) c = if sc `satisfies` c
-               then Just sc
+matchW :: Either SClause Clause -> Clause -> Either SClause Clause
+matchW (Right c) _ = Right c
+matchW (Left sc) c = if sc `satisfies` c
+               then Left sc
                else sc `findExtFor` c
 
 satisfies :: SClause -> Clause -> Bool
 satisfies sc c = any (`elem` c) sc
 
-findExtFor :: SClause -> Clause -> Maybe SClause
+findExtFor :: SClause -> Clause -> Either SClause Clause
 findExtFor sc c = case rmLeftEq (maxAbs sc) c of
-                       [] ->  Nothing
-                       lst -> Just (minAbs lst:sc)
+                       [] ->  Right c
+                       lst -> Left (minAbs lst:sc)
 
 rmLeftEq :: Literal -> Clause -> Clause
 rmLeftEq l = filter ((> abs l) . abs)
@@ -144,13 +147,18 @@ matchWS ss (Just sc) c = if sc `satisfies` c
 
 
 -- Exploit Lazyness to get a stream of Sat Sentences with "a" Literals
-genSat :: Integer -> Integer -> Sentence
-genSat 3 m = genSatHelp rs m
-    where g = unsafePerformIO $ getStdGen
+gen3Sats :: Sentence
+gen3Sats = genSatHelp rs
+    where g = unsafePerformIO getStdGen
           rs = randomRs (-3,3) g
-genSat n m = error "genSat is unwritten"
+genSats _ = error "genSat is unwritten"
 
-genSatHelp :: [Integer] -> Integer -> Sentence
-genSatHelp _ 0 = []
-genSatHelp rs m = (delete 0 $ nubBy eqAbs $ take 3 rs) : (genSatHelp (drop 3 rs) (m-1))
+genSatHelp :: [Integer] -> Sentence
+genSatHelp rs = makeClause : (genSatHelp $ drop 3 rs)
   where eqAbs x y = abs x == abs y
+        makeClause = delete 0 $ nubBy eqAbs $ take 3 rs
+
+test = (unsafePerformIO $ print $ head datas) `seq` map dm algs
+  where datas = [take 10 gen3Sats, take 100 gen3Sats, take 1000 gen3Sats]
+        algs  = [davisPutnam, subtraction, walkthru]
+        dm alg = map alg datas
