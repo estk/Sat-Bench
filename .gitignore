@@ -2,3 +2,6 @@
 *.swp
 *.hi
 *.o
+*.aux
+*.ps
+*.hp

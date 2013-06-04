@@ -3,21 +3,11 @@ import Sat
 
 sat = genSat 3
 
-fib :: Int -> Int
-fib 0 = 0
-fib 1 = 1
-fib n = fib (n-1) + fib (n-2)
-
 main = defaultMain [
-       {-bgroup "naive" [-}
-                        {-bench "fib 10" $ whnf fib 10-}
-                      {-, bench "fib 20" $ whnf fib 20-}
-                      {-, bench "fib 30" $ whnf fib 30-}
-                      {-],-}
        bgroup "davisPutnam"
-                      [ bench "10" $ whnf davisPutnam (sat 1000)
-                      , bench "20" $ whnf davisPutnam (sat 2000)
-                      , bench "30" $ whnf davisPutnam (sat 3000)
+                      [ bench "10" $ whnf davisPutnam $ sat 10
+                      , bench "20" $ whnf davisPutnam $ sat 20
+                      , bench "30" $ whnf davisPutnam $ sat 30
                       ]
                    ,
        bgroup "subtraction"

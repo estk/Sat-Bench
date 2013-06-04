@@ -10,6 +10,7 @@ import Data.Ord
 import Data.Function
 import Control.Applicative
 import System.Random
+import System.IO.Unsafe
 
 -- We opt for DIMACS[5] representation as in  the reader
 type Literal = Integer
@@ -89,7 +90,7 @@ negLeftL l = map negate . filter ((< abs l) . abs)
 {-walkthru    = or . map walk . permutations-}
     
 walkthru :: Sentence -> Bool
-walkthru s = case foldl matchW (Just []) s of -- accumulate a solution
+walkthru s = case foldl' matchW (Just []) s of -- accumulate a solution
            Nothing -> False
            Just _  -> True
 
@@ -145,7 +146,7 @@ matchWS ss (Just sc) c = if sc `satisfies` c
 -- Exploit Lazyness to get a stream of Sat Sentences with "a" Literals
 genSat :: Integer -> Integer -> Sentence
 genSat 3 m = genSatHelp rs m
-    where g = mkStdGen 1
+    where g = unsafePerformIO $ getStdGen
           rs = randomRs (-3,3) g
 genSat n m = error "genSat is unwritten"
 
