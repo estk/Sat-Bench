@@ -5,6 +5,11 @@ module Sat ( davisPutnam
            , genSat
            ) where
 
+import Data.List
+import Data.Ord
+import Data.Function
+import Control.Applicative
+
 -- We opt for DIMACS[5] representation as in  the reader
 type Literal = Integer
 type Clause  = [Literal]
@@ -68,17 +73,84 @@ match (solns, s, c) l = case samePairity l s of
                  Just False -> (solns, s, c)
                  Nothing    -> (((negLeftL l c)++[l]):solns, s, c)
 
+-- Nothing => not in, Just True => Same pairity, Just False => opposite
+-- pairity
 samePairity :: Literal -> SClause -> Maybe Bool
 samePairity l s = case filter ((== abs l) . abs) s of
-                    [] -> Nothing
+                    []  -> Nothing
                     lst -> Just $ l `elem` lst
 
 negLeftL :: Literal -> Clause -> SClause
 negLeftL l = map negate . filter ((< abs l) . abs)
 
-walkthru    :: Sentence -> Bool
-walkthru    = error "undefined"
 
+--------------
+-- Walkthru --
+--------------
+
+data Match = Match | Fail Integer
+
+walkthru    :: Sentence -> Bool
+walkthru    = or . map walk . permutations
+    
+walk :: Sentence -> Bool
+walk s = case foldl matchW (Just []) s of -- accumulate a solution
+           Nothing -> False
+           Just _  -> True
+
+{-Nothing => Fail, Just SClause => SClause matches c-}
+{-matchW :: Maybe SClause -> Clause -> Maybe SClause-}
+{-matchW Nothing _ = Nothing-}
+{-matchW (Just sc) c = case foldl (matcher c) (Fail 0) sc of-}
+               {-Match   -> Just sc-}
+               {-Fail l  -> (sortBy (compare `on` abs)) <$> (findExtFor l sc c)-}
+
+{-matcher :: Clause -> Match -> Literal -> Match-}
+{-matcher _ Match _ = Match-}
+{-matcher c _ l     = if l `elem` c-}
+                    {-then Match  -}
+                    {-else Fail l -}
+
+{-findExtFor :: Literal -> SClause -> Clause -> Maybe SClause-}
+{-findExtFor l sc c = case filter ((> abs l) . abs) c of-}
+                      {-[]  -> Nothing-}
+                      {-lst -> Just (sc ++ [minAbs lst])-}
+
+
+matchW :: Maybe SClause -> Clause -> Maybe SClause
+matchW Nothing _ = Nothing
+matchW (Just sc) c = if sc `satisfies` c
+               then Just sc
+               else sc `findExtFor` c
+
+satisfies :: SClause -> Clause -> Bool
+satisfies sc c = any (`elem` c) sc
+
+findExtFor :: SClause -> Clause -> Maybe SClause
+findExtFor sc c = case rmLeftEq (maxAbs sc) c of
+                       [] ->  Nothing
+                       lst -> Just ((minAbs lst):sc)
+
+rmLeftEq :: Literal -> Clause -> Clause
+rmLeftEq l c = filter ((> abs l) . abs) c
+
+maxAbs :: SClause -> Literal
+maxAbs sc = foldl mAbs 0 sc
+  where mAbs m x = if (abs m) > (abs x)
+                     then m
+                     else x
+
+minAbs :: Clause -> Literal
+minAbs sc = foldl mAbs (head sc) sc
+  where mAbs m x = if (abs m) < (abs x)
+                     then m
+                     else x
+
+
+-------------
+-- Walksub --
+-------------
+        
 walksub     :: Sentence -> Bool
 walksub     = error "undefined"
 
