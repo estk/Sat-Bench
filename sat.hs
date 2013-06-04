@@ -98,25 +98,6 @@ walk s = case foldl matchW (Just []) s of -- accumulate a solution
            Nothing -> False
            Just _  -> True
 
-{-Nothing => Fail, Just SClause => SClause matches c-}
-{-matchW :: Maybe SClause -> Clause -> Maybe SClause-}
-{-matchW Nothing _ = Nothing-}
-{-matchW (Just sc) c = case foldl (matcher c) (Fail 0) sc of-}
-               {-Match   -> Just sc-}
-               {-Fail l  -> (sortBy (compare `on` abs)) <$> (findExtFor l sc c)-}
-
-{-matcher :: Clause -> Match -> Literal -> Match-}
-{-matcher _ Match _ = Match-}
-{-matcher c _ l     = if l `elem` c-}
-                    {-then Match  -}
-                    {-else Fail l -}
-
-{-findExtFor :: Literal -> SClause -> Clause -> Maybe SClause-}
-{-findExtFor l sc c = case filter ((> abs l) . abs) c of-}
-                      {-[]  -> Nothing-}
-                      {-lst -> Just (sc ++ [minAbs lst])-}
-
-
 matchW :: Maybe SClause -> Clause -> Maybe SClause
 matchW Nothing _ = Nothing
 matchW (Just sc) c = if sc `satisfies` c
