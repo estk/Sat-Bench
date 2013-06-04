@@ -16,10 +16,6 @@ type Literal = Integer
 type Clause  = [Literal]
 type Sentence  = [Clause]
 
--- Specialized data types for the sub and walksub
-type BoolVector = [Literal]
-type BoolSpace  = [BoolVector]
-
 --- Algorithms ---
 
 ------------------
@@ -72,7 +68,7 @@ match :: (SS, SClause, Clause) -> Literal -> (SS, SClause, Clause)
 match (solns, s, c) l = case samePairity l s of
                  Just True  -> (s:solns, s, c)
                  Just False -> (solns, s, c)
-                 Nothing    -> (((negLeftL l c)++[l]):solns, s, c)
+                 Nothing    -> ((negLeftL l c ++ [l]):solns, s, c)
 
 -- Nothing => not in, Just True => Same pairity, Just False => opposite
 -- pairity
@@ -89,13 +85,11 @@ negLeftL l = map negate . filter ((< abs l) . abs)
 -- Walkthru --
 --------------
 
-data Match = Match | Fail Integer
-
-walkthru    :: Sentence -> Bool
-walkthru    = or . map walk . permutations
+{-walkthru    :: Sentence -> Bool-}
+{-walkthru    = or . map walk . permutations-}
     
-walk :: Sentence -> Bool
-walk s = case foldl matchW (Just []) s of -- accumulate a solution
+walkthru :: Sentence -> Bool
+walkthru s = case foldl matchW (Just []) s of -- accumulate a solution
            Nothing -> False
            Just _  -> True
 
@@ -111,20 +105,20 @@ satisfies sc c = any (`elem` c) sc
 findExtFor :: SClause -> Clause -> Maybe SClause
 findExtFor sc c = case rmLeftEq (maxAbs sc) c of
                        [] ->  Nothing
-                       lst -> Just ((minAbs lst):sc)
+                       lst -> Just (minAbs lst:sc)
 
 rmLeftEq :: Literal -> Clause -> Clause
-rmLeftEq l c = filter ((> abs l) . abs) c
+rmLeftEq l = filter ((> abs l) . abs)
 
 maxAbs :: SClause -> Literal
-maxAbs sc = foldl mAbs 0 sc
-  where mAbs m x = if (abs m) > (abs x)
+maxAbs = foldl mAbs 0
+  where mAbs m x = if abs m > abs x
                      then m
                      else x
 
 minAbs :: Clause -> Literal
 minAbs sc = foldl mAbs (head sc) sc
-  where mAbs m x = if (abs m) < (abs x)
+  where mAbs m x = if abs m < abs x
                      then m
                      else x
 
