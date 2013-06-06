@@ -66,7 +66,7 @@ res c sc = if not . null $ c `intersect` sc
              then [sc] --most general sclause matches
              else addin sc $ filter (not . (`absElem` sc)) c --consider free vars
 
---take a SClause and literals which can be assigned such that they will match the clause specified to the caller. 
+--Take a SClause and literals which can be assigned such that they will match the clause specified to the caller. 
 addin :: SClause -> [Literal] -> SS
 addin sc lst = map (++ sc) (addends [] lst)
 
@@ -79,8 +79,6 @@ addends added lst =   (minAbsRest : (map negate $ delete minAbsRest added))
 
 absElem :: (Num a, Eq a) => a -> [a] -> Bool
 absElem a lst = abs a `elem` map abs lst
-{-case foldl match ([], sc, c) c of-}
-            {-(ss, _, _) -> ss-}
 
 match :: (SS, SClause, Clause) -> Literal -> (SS, SClause, Clause)
 match (ss, s, c) l = case samePairity l s of
@@ -89,7 +87,6 @@ match (ss, s, c) l = case samePairity l s of
                  Nothing    -> ((negLeftL l c ++ [l]):ss, s, c)
 
 -- Nothing => not in, Just True => Same pairity, Just False => opposite
--- pairity
 samePairity :: Literal -> SClause -> Maybe Bool
 samePairity l s = case filter ((== abs l) . abs) s of
                     []  -> Nothing
@@ -142,6 +139,7 @@ maxAbs = foldl mAbs 0
                      then m
                      else x
 
+-- sc cannot have an empty head
 minAbs :: Clause -> Literal
 minAbs sc = foldl mAbs (head sc) sc
   where mAbs m x = if abs m < abs x
@@ -154,23 +152,26 @@ minAbs sc = foldl mAbs (head sc) sc
 -------------
 
 walksub :: Sentence -> Bool
-walksub = dispatch []
+walksub = dispatch [0]
 
 -- see if by starting with sc, we can build a matching SClause
 dispatch :: SClause -> Sentence -> Bool
-dispatch sc s = case walker sc s of
+dispatch sc s | null s = False
+              | null sc = False
+              | otherwise =
+                case walker sc s of
                   Left _  -> True
-                  Right c -> or . map (uncurry dispatch) $ subber c s
+                  Right c -> or . map (`dispatch` (delete c s)) $ subber c sc
 
 -- see if by starting with sc, we can build a matching SClause
 -- Fail -> Left Failure Clause, Success -> Satisfying Clause
 walker :: SClause -> Sentence -> Either SClause Clause
-walker sc s = error "unwritten"
+walker sc s = foldl dispatchW (Left sc) s
 
 -- Takes clause where walker failed, subtracts it, builds a list of pairs
 -- like so [(Partial SClause, Sentence to match against)]
-subber :: Clause -> Sentence -> [(SClause, Sentence)]
-subber c s = error "unwritten"
+subber :: Clause -> SClause -> SS
+subber c sc = res c sc
 
 -------------------
 -- Generate Sats --
@@ -188,7 +189,8 @@ genSatHelp rs = makeClause : (genSatHelp $ drop 3 rs)
   where eqAbs x y = abs x == abs y
         makeClause = delete 0 $ nubBy eqAbs $ take 3 rs
 
-test = (unsafePerformIO $ print $ head datas) `seq` map dm algs
-  where datas = [take 5 gen3Sats, take 100 gen3Sats, take 1000 gen3Sats]
-        algs  = [davisPutnam, subtraction, walkthru]
+test = (unsafePerformIO $ print $ head datas) `seq` mapM print $ map dm algs
+  where datas = map (`take` gen3Sats) [5..20] 
+        {-[take 3 gen3Sats, take 5 gen3Sats, take 7 gen3Sats]-}
+        algs  = [davisPutnam, subtraction, walkthru, walksub]
         dm alg = map alg datas

@@ -30,11 +30,11 @@ main = defaultMain [
                       , bench "100"  $ whnf walkthru sat2
                       , bench "1000" $ whnf walkthru sat3
                       ]
-                   {-,-}
-       {-bgroup "walksub"-}
-                      {-[ bench "10" $ whnf walksub sat-}
-                      {-, bench "20" $ whnf walksub sat-}
-                      {-, bench "30" $ whnf walksub sat-}
-                      {-]-}
+                   ,
+       bgroup "walksub"
+                      [ bench "10"   $ whnf walksub sat1
+                      , bench "100"  $ whnf walksub sat2
+                      , bench "1000" $ whnf walksub sat3
+                      ]
                    ]
 
