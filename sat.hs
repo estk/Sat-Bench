@@ -109,14 +109,19 @@ walkthru s = walk s []
 walk :: Sentence -> [Sentence] -> Bool
 walk s p = if s `elem` p
              then False
-             else 
-               case foldl matchW (Left []) s of -- accumulate a solution
-                 Right c -> walk (c:(delete c s)) (s:p)
-                 Left _  -> True
+             else  case walkh of
+                    Right c -> walk (c:(delete c s)) (s:p)
+                    Left _  -> True
+  where walkh = foldl dispatchW (Left []) s -- accumulate a SClause
 
-matchW :: Either SClause Clause -> Clause -> Either SClause Clause
-matchW (Right c) _ = Right c
-matchW (Left sc) c = if sc `satisfies` c
+-- propagate Right (failure clause)
+dispatchW :: Either SClause Clause -> Clause -> Either SClause Clause
+dispatchW e c = either (`matchW` c) Right e
+
+-- see if sc matches c
+-- Fail => Right Failed Clause, Left adapted sc (to match c)
+matchW :: SClause -> Clause -> Either SClause Clause
+matchW sc c = if sc `satisfies` c
                then Left sc
                else sc `findExtFor` c
 
