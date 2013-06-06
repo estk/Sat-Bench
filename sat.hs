@@ -147,20 +147,13 @@ minAbs sc = foldl mAbs (head sc) sc
 -------------
 -- Walksub --
 -------------
-        
-walksub     :: Sentence -> Bool
-walksub s = case ws s of -- accumulate a solution
-           Nothing -> False
-           Just _  -> True
 
-ws :: Sentence -> Maybe SClause
-ws = foldl (matchWS [[0]]) (Just [])
+walksub :: Sentence -> Bool
+walksub s = error "unwritten"
 
-matchWS :: SS -> Maybe SClause -> Clause -> Maybe SClause
-matchWS _ Nothing _    = Nothing
-matchWS ss (Just sc) c = if sc `satisfies` c
-               then Just sc
-               else error "unwritten"
+-------------------
+-- Generate Sats --
+-------------------
 
 
 -- Exploit Lazyness to get a stream of Sat Sentences with "a" Literals
@@ -168,7 +161,6 @@ gen3Sats :: Sentence
 gen3Sats = genSatHelp rs
     where g = unsafePerformIO getStdGen
           rs = randomRs (-3,3) g
-genSats _ = error "genSat is unwritten"
 
 genSatHelp :: [Integer] -> Sentence
 genSatHelp rs = makeClause : (genSatHelp $ drop 3 rs)
