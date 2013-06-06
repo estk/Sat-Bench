@@ -149,7 +149,23 @@ minAbs sc = foldl mAbs (head sc) sc
 -------------
 
 walksub :: Sentence -> Bool
-walksub s = error "unwritten"
+walksub = dispatch []
+
+-- see if by starting with sc, we can build a matching SClause
+dispatch :: SClause -> Sentence -> Bool
+dispatch sc s = case walker sc s of
+                  Left _  -> True
+                  Right c -> or . map (uncurry dispatch) $ subber c s
+
+-- see if by starting with sc, we can build a matching SClause
+-- Fail -> Left Failure Clause, Success -> Satisfying Clause
+walker :: SClause -> Sentence -> Either SClause Clause
+walker sc s = error "unwritten"
+
+-- Takes clause where walker failed, subtracts it, builds a list of pairs
+-- like so [(Partial SClause, Sentence to match against)]
+subber :: Clause -> Sentence -> [(SClause, Sentence)]
+subber c s = error "unwritten"
 
 -------------------
 -- Generate Sats --
