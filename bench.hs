@@ -1,5 +1,6 @@
 import Criterion.Main
 import Sat
+import Surely
 
 sat = gen3Sats
 sat1 = take 10 sat
@@ -11,6 +12,12 @@ main = defaultMain [
                       [ bench "10"   $ whnf null sat1 
                       , bench "100"  $ whnf null sat2 
                       , bench "1000" $ whnf null sat3 
+                      ]
+                   ,
+       bgroup "surely"
+                      [ bench "10"   $ whnf solve sat1
+                      , bench "100"  $ whnf solve sat2
+                      , bench "1000" $ whnf solve sat3
                       ]
                    ,
        bgroup "davisPutnam"

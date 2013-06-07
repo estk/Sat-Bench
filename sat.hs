@@ -5,6 +5,8 @@ module Sat ( davisPutnam
            , gen3Sats
            ) where
 
+import Surely
+import Data.Maybe
 import Data.List
 import Data.Ord
 import Data.Function
@@ -189,8 +191,13 @@ genSatHelp rs = makeClause : (genSatHelp $ drop 3 rs)
   where eqAbs x y = abs x == abs y
         makeClause = delete 0 $ nubBy eqAbs $ take 3 rs
 
-test = (unsafePerformIO $ print $ head datas) `seq` mapM print $ map dm algs
+
+-- We run each alg over a set of 3-Sat sentences of 5 to 20 clauses in
+-- lenght. Solve is imported from an outside project as to insure
+-- correctness.
+test :: Bool
+test = null . tail . nub $ map dm algs
   where datas = map (`take` gen3Sats) [5..20] 
         {-[take 3 gen3Sats, take 5 gen3Sats, take 7 gen3Sats]-}
-        algs  = [davisPutnam, subtraction, walkthru, walksub]
+        algs  = [(isJust . solve), davisPutnam, subtraction, walkthru, walksub]
         dm alg = map alg datas
