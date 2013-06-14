@@ -181,10 +181,15 @@ subber c sc = res c sc
 
 
 -- Exploit Lazyness to get a stream of Sat Sentences with "a" Literals
-gen3Sats :: Sentence
-gen3Sats = genSatHelp rs
+gen3SatsUS :: Sentence
+gen3SatsUS = genSatHelp rs
     where g = unsafePerformIO getStdGen
           rs = randomRs (-3,3) g
+
+gen3Sats :: IO Sentence
+gen3Sats = do 
+           g <- getStdGen
+           return $ genSatHelp (randomRs (-3,3) g)
 
 genSatHelp :: [Integer] -> Sentence
 genSatHelp rs = makeClause : (genSatHelp $ drop 3 rs)
@@ -197,7 +202,7 @@ genSatHelp rs = makeClause : (genSatHelp $ drop 3 rs)
 -- correctness.
 test :: Bool
 test = null . tail . nub $ map dm algs
-  where datas = map (`take` gen3Sats) [5..20] 
+  where datas = map (`take` gen3SatsUS) [5..20] 
         {-[take 3 gen3Sats, take 5 gen3Sats, take 7 gen3Sats]-}
         algs  = [(isJust . solve), davisPutnam, subtraction, walkthru, walksub]
         dm alg = map alg datas

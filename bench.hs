@@ -1,13 +1,13 @@
 import Criterion.Main
 import Sat
 import Surely
+import Control.Monad
 
-sat = gen3Sats
-sat1 = take 10 sat
-sat2 = take 100 sat
-sat3 = take 1000 sat
-
-main = defaultMain [
+main = do
+    sat1 <- liftM (take 10) gen3Sats
+    sat2 <- liftM (take 100) gen3Sats    
+    sat3 <- liftM (take 1000) gen3Sats    
+    return $ defaultMain [
        bgroup "genSat"
                       [ bench "10"   $ whnf null sat1 
                       , bench "100"  $ whnf null sat2 
