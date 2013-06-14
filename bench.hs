@@ -1,47 +1,63 @@
 import Criterion.Main
 import Sat
-import Surely
 import Control.Monad
+import System.Random
 
-main = do
-    sat1 <- liftM (take 10) gen3Sats
-    sat2 <- liftM (take 100) gen3Sats    
-    sat3 <- liftM (take 1000) gen3Sats    
-    return $ defaultMain [
-       bgroup "genSat"
-                      [ bench "10"   $ whnf null sat1 
-                      , bench "100"  $ whnf null sat2 
-                      , bench "1000" $ whnf null sat3 
+-- Using 10 Literals
+gen = mkStdGen 1
+sat1 = genSats 10 10 gen
+sat2 = genSats 100 10 gen
+sat3 = genSats 1000 10 gen
+
+unsat1 = genUnSats 10 10 gen
+unsat2 = genUnSats 100 10 gen
+unsat3 = genUnSats 1000 10 gen
+
+main = defaultMain [
+       bgroup "davisPutnam-sat"
+                      [ bench "10"   $ nf davisPutnam sat1
+                      , bench "100"  $ nf davisPutnam sat2
+                      , bench "1000" $ nf davisPutnam sat3
                       ]
                    ,
-       bgroup "surely"
-                      [ bench "10"   $ whnf solve sat1
-                      , bench "100"  $ whnf solve sat2
-                      , bench "1000" $ whnf solve sat3
+       bgroup "davisPutnam-unsat"
+                      [ bench "10"   $ nf davisPutnam unsat1
+                      , bench "100"  $ nf davisPutnam unsat2
+                      , bench "1000" $ nf davisPutnam unsat3
                       ]
                    ,
-       bgroup "davisPutnam"
-                      [ bench "10"   $ whnf davisPutnam sat1
-                      , bench "100"  $ whnf davisPutnam sat2
-                      , bench "1000" $ whnf davisPutnam sat3
+       bgroup "subtraction-sat"
+                      [ bench "10"   $ nf subtraction sat1
+                      , bench "100"  $ nf subtraction sat2
+                      , bench "1000" $ nf subtraction sat3
                       ]
                    ,
-       bgroup "subtraction"
-                      [ bench "10"   $ whnf subtraction sat1
-                      , bench "100"  $ whnf subtraction sat2
-                      , bench "1000" $ whnf subtraction sat3
+       bgroup "subtraction-unsat"
+                      [ bench "10"   $ nf subtraction unsat1
+                      , bench "100"  $ nf subtraction unsat2
+                      , bench "1000" $ nf subtraction unsat3
                       ]
                    ,
-       bgroup "walkthru"
-                      [ bench "10"   $ whnf walkthru sat1
-                      , bench "100"  $ whnf walkthru sat2
-                      , bench "1000" $ whnf walkthru sat3
+       bgroup "walkthru-sat"
+                      [ bench "10"   $ nf walkthru sat1
+                      , bench "100"  $ nf walkthru sat2
                       ]
                    ,
-       bgroup "walksub"
-                      [ bench "10"   $ whnf walksub sat1
-                      , bench "100"  $ whnf walksub sat2
-                      , bench "1000" $ whnf walksub sat3
+       bgroup "walkthru-unsat"
+                      [ bench "10"   $ nf walkthru unsat1
+                      , bench "100"  $ nf walkthru unsat2
+                      ]
+                   ,
+       bgroup "walksub-sat"
+                      [ bench "10"   $ nf walksub sat1
+                      , bench "100"  $ nf walksub sat2
+                      , bench "1000" $ nf walksub sat3
+                      ]
+                   ,
+       bgroup "walksub-unsat"
+                      [ bench "10"   $ nf walksub unsat1
+                      , bench "100"  $ nf walksub unsat2
+                      , bench "1000" $ nf walksub unsat3
                       ]
                    ]
 

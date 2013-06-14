@@ -2,7 +2,8 @@ module Sat ( davisPutnam
            , subtraction
            , walkthru
            , walksub
-           , gen3Sats
+           , genSats
+           , genUnSats
            ) where
 
 import Surely
@@ -180,29 +181,26 @@ subber c sc = res c sc
 -------------------
 
 
+genUnSats :: RandomGen g => Int -> Integer -> g -> Sentence
+genUnSats m n g = (take m $ genSats m n g) ++ [[]]
+
 -- Exploit Lazyness to get a stream of Sat Sentences with "a" Literals
-gen3SatsUS :: Sentence
-gen3SatsUS = genSatHelp rs
-    where g = unsafePerformIO getStdGen
-          rs = randomRs (-3,3) g
+genSats :: RandomGen g => Int -> Integer -> g -> Sentence
+genSats m n g = take m $ genSatHelp n (randomRs (-n,n) g)
 
-gen3Sats :: IO Sentence
-gen3Sats = do 
-           g <- getStdGen
-           return $ genSatHelp (randomRs (-3,3) g)
-
-genSatHelp :: [Integer] -> Sentence
-genSatHelp rs = makeClause : (genSatHelp $ drop 3 rs)
+genSatHelp :: Integer -> [Integer] -> Sentence
+genSatHelp n rs = makeClause : (genSatHelp n $ drop (fromIntegral n) rs)
   where eqAbs x y = abs x == abs y
-        makeClause = delete 0 $ nubBy eqAbs $ take 3 rs
+        makeClause = delete 0 $ nubBy eqAbs $ take (fromIntegral n) rs
 
 
 -- We run each alg over a set of 3-Sat sentences of 5 to 20 clauses in
 -- lenght. Solve is imported from an outside project as to insure
 -- correctness.
 test :: Bool
-test = null . tail . nub $ map dm algs
-  where datas = map (`take` gen3SatsUS) [5..20] 
-        {-[take 3 gen3Sats, take 5 gen3Sats, take 7 gen3Sats]-}
+test = null . tail . nub $ nakedTest
+
+nakedTest = map dm algs
+  where datas = map (\n -> (genSats n 3 (mkStdGen 1))) [5..20] 
         algs  = [(isJust . solve), davisPutnam, subtraction, walkthru, walksub]
         dm alg = map alg datas
