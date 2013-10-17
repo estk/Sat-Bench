@@ -1,5 +1,6 @@
 bench
-bench.html
+usbench
+*.html
 *.un~
 *.swp
 *.hi
